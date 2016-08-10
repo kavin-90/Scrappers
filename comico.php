@@ -136,7 +136,11 @@ function get_images($url){
 $full_list = create_dom($url);
 
 // All Series and Chapter and Images Storage Directory
-$base_dir = "H:/Manga Raw High DB/comico";
+$base_dir = "comico";
+
+if(!file_exists("$base_dir")){
+mkdir("$base_dir");
+}
 
 $msg = array();
 
@@ -212,26 +216,7 @@ return $msg;
 }
 
 $url = "http://www.comico.jp/articleList.nhn?titleNo=1300";
-//$all_list = get_pagination($url);
 
+$all_list = get_pagination($url);
 
-
-$range = range(101,120);
-
-$chapter_dl = "";
-
-foreach($range as $new_url){
-
-$url = "http://www.comico.jp/detail.nhn?titleNo=311&articleNo=$new_url";
-
-$chapter_dl = get_images($url);
-
-
-}
-
-
-
-
-
-
-
+echo $all_list;
