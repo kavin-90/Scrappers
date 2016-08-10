@@ -21,7 +21,7 @@ return $result;
 function get_chapters($url){
 $string = create_dom($url);
 
-preg_match_all("/<a href=\"(.*?)\" class=\"button\">(.*?)<\/a>/", $string, $chapters);
+preg_match_all("/<a href=\"(.*?)\" class=\"(button|read)\">(.*?)<\/a>/", $string, $chapters);
 
 if(isset($chapters[1])){
 foreach($chapters[1] as $chapter_url){
@@ -34,6 +34,8 @@ get_page($chapter_url);
 
 }	
 
+} else {
+echo "No Chapters Found!";
 }
 
 }
@@ -91,7 +93,7 @@ $save_path = "$series_slug/$chapter_slug";
 $i = 0;
 foreach($data['pages']as $json_data){
 $i++;
-$image_path = $json_data['files']['h1536.jpeg'];
+$image_path = isset($json_data['files']['h1536.jpeg']) ? $json_data['files']['h1536.jpeg'] : $json_data['files']['h1024.jpeg'];
 $image_url = "https://www.sunday-webry.com/assets/episodes/$key/$image_path";
 
 $content = file_get_contents($image_url);
@@ -113,7 +115,7 @@ echo "Unable to save Page $i <br>\r\n";
 
 
 
-$get_url = "https://www.sunday-webry.com/comics/bokutachitsukiattemasu";
+$get_url = "https://www.sunday-webry.com/comics/bokutachitsukiattemasu/";
 
 
 echo get_chapters($get_url);
