@@ -69,43 +69,30 @@ return $msg;
 function get_pagination($url){
 $full_list = create_dom($url);
 
-// http://www.comico.jp/articleList.nhn?titleNo=9600&page=3
-preg_match("/<li class=\"m-pager__item m-pager__item--focus\"><a href=\"#\">(.*?)<\/a><\/li>/", $full_list, $pages);
+preg_match("/<a href=\"(.*?)?page=(.*?)\" class='_last'>››<\/a>/i", $full_list, $last_page);
 
-preg_match_all("/<li class=\"m-pager__item\"><a href=\"(.*)\">(.*)<\/a><\/li>/", $full_list, $output_array);
-
-$msg = array();
-
-if(isset($output_array[1])){
-
-$i = 0;
-
-$new_array_value = str_replace("http://www.comico.jp","",$url);
-
-array_unshift($output_array[1],"$new_array_value&page=1");
-
-foreach(array_reverse($output_array[1]) as $pager){
-$i++;
-
-$last = end($output_array[1]);
-$ah = explode("&page=",$last);
-$total = $ah[1];
-
-if($i === $total){
-
-$replace_number = str_replace("&page=$total","&page=1",$pager);
-
-$new_url = "http://www.comico.jp$replace_number";
+// Get Page Links
+//preg_match_all("/<li class=\"m-pager__item\"><a href=\"(.*)\">(.*)<\/a><\/li>/", $full_list, $page_list);
+if(isset($last_page[2])){
+setcookie("total_pages", $last_page[2]);
 }
-else {
-$new_url = "http://www.comico.jp$pager";	
-}
+
+
+$last_page = isset($_COOKIE['total_pages']) ? $_COOKIE['total_pages'] : 0;
+
+$page_list = range($last_page,1);
+
+$msg = "";
+
+
+foreach($page_list as $pager){
+
+$new_url = "$url&page=$pager\r\n";
 
 $chap_list = get_chapters($new_url);
 
 }
 
-}
 
 return $msg;
 }
@@ -114,17 +101,30 @@ return $msg;
 function get_chapters($url){
 $full_list = create_dom($url);
 
-preg_match_all("/<a href=\"(.*?)\" class=\"m-thumb-episode__inner\" itemprop=\"url\">/", $full_list, $output_array);
-
 $chap_list = array();
 
-foreach(array_reverse($output_array[1]) as $chapters){
+if(empty($full_list)) { 
+echo "Unable to Read Page: $url\r\n"; 
+} else {
+
+echo "Reading Page No. $url\r\n";
+
+preg_match_all("/<a href=\"(.*?)\" class=\"m-thumb-episode__inner\" itemprop=\"url\">/i", $full_list, $chapter_list);
+
+if(isset($chapter_list[1])){
+
+foreach(array_reverse($chapter_list[1]) as $chapters){
 
 $chap_url = $chapters;
 
 $chap_list[] = $chap_url;
 
 $get_images = get_images($chap_url);
+
+} 
+} else {
+echo "No Chapters Found!";
+}
 
 }
 
@@ -150,7 +150,7 @@ preg_match("/<p class=\"m-title-hero02__title\" itemprop=\"name\">(.*?)<\/p>/is"
 // Chapter Number
 preg_match("/<a href=\"(.*?)\" class=\"_contribTitle\">(.*?)<\/a>/is", $full_list, $chap_data);
 // Get Images
-preg_match_all("/\s<img src=\"(.*?)\" alt=\"(.*?)\"\s/is", $full_list, $output_array);
+preg_match_all("/\s<img src=\"(.*?)\" alt=\"(.*?)\"\s/is", $full_list, $image_list);
 
 if(isset($series_data[1],$chap_data[2])){
 
@@ -170,13 +170,13 @@ if(!file_exists("$base_dir/$series_dir")){
 mkdir("wfio://$base_dir/$series_dir");
 }
 
-if(isset($output_array[1])){
+if(isset($image_list[1])){
 $i = 0;
-foreach($output_array[1] as $images){
+foreach($image_list[1] as $images){
 $i++;
 
-if(!file_exists("$base_dir/$series_dir/$dir_name")){
-mkdir("wfio://$base_dir/$series_dir/$dir_name");
+if(!file_exists("$base_dir/$series_dir/$1 - $dir_name")){
+mkdir("wfio://$base_dir/$series_dir/$i - $dir_name");
 }
 
 
@@ -215,7 +215,7 @@ $msg = "Status : <b>Success</b>".PHP_EOL;
 return $msg;
 }
 
-$url = "http://www.comico.jp/articleList.nhn?titleNo=1300";
+$url = "http://www.comico.jp/articleList.nhn?titleNo=1423";
 
 $all_list = get_pagination($url);
 
