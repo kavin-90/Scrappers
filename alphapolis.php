@@ -132,6 +132,7 @@ $page = isset($_GET["page"]) ? filter_var ( $_GET["page"], FILTER_SANITIZE_STRIN
 <meta charset="utf-8">
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <meta http-equiv="edit-Type" edit="text/html; charset=utf-8">
+<title>Alphapolis Downloader</title>
 <style type="text/css">
 /* Main */
 * { box-sizing: border-box }

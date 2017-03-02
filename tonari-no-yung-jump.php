@@ -24,35 +24,42 @@ return substr($headers[0], 9, 3);
 }
 
 
+
+
 function parse_html($url){
 
 $text = create_dom($url);
 
 $doc = new DOMDocument();
 libxml_use_internal_errors(true);
-$doc->loadHTML($text); // the variable $ads contains the HTML code above
+$doc->loadHTML(mb_convert_encoding($text, 'HTML-ENTITIES', 'UTF-8')); // the variable $ads contains the HTML code above
 libxml_clear_errors();
 $xpath = new DOMXPath($doc);
 $series = array();
+$page_list = array();
+$get_pages = $xpath->query('//img[@class="js-page-image"]');
+foreach($get_pages as $pages){
+$page_list[] = $pages->getAttribute('src');
+}
 
-$title = $xpath->query('//div[@id="viewerPc"]/h2');
-$chapter = $xpath->query('//div[@id="viewerPc"]/span');
+$title = $xpath->query('//section[@class="viewer-colophon-nomal"]/h4');
+$chapter = $xpath->query('//section[@class="viewer-colophon-nomal"]/p[@class="viewer-colophon-series-num"]');
 
 $series["title"] = $title[0]->nodeValue;
 $series["slug"] = $title[0]->nodeValue;
 $series["chapter_number"] = $chapter[0]->nodeValue;
+$series["page_list"] = $page_list;
 
 return $series;
 }
 
 
-function download($url){
 
-$text = create_dom("$url/json");
+function download($url){
 
 $series = parse_html($url);
 
-$json = json_decode($text,true);
+$page_list = $series["page_list"];
 
 $series_title = $series["title"];
 $chapter_number = $series["chapter_number"];
@@ -61,13 +68,38 @@ if(!file_exists("wfio://$series_title")) mkdir("wfio://$series_title");
 
 if(!file_exists("wfio://$series_title/$chapter_number")) mkdir("wfio://$series_title/$chapter_number");
 
-if(isset($json)){
+if(isset($page_list)){
 
-foreach($json as $files){
+$i = 0;
+foreach($page_list as $files){
+$i++;
 
-$file_url = str_replace("/img/","https://web-ace.jp/img/",$files);
+$file_url = $files;
 
-$file_name = basename($file_url);
+$image_info = getImageSize($file_url);
+switch ($image_info['mime']) {
+case 'image/gif':
+    $extension = 'gif';
+    break;
+case 'image/jpeg':
+    $extension = 'jpg';
+    break;
+case 'image/png':        
+    $extension = 'png';
+    break;
+default:
+    // handle errors
+    break;
+}
+
+
+
+if($i<10){
+$file_name = "0$i.$extension";
+} else {
+$file_name = "$i.$extension";
+}
+
 
 $destination = "$series_title/$chapter_number/$file_name";
 
@@ -117,7 +149,7 @@ if (filter_var($url, FILTER_VALIDATE_URL)) {
 <meta charset="utf-8">
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <meta http-equiv="edit-Type" edit="text/html; charset=utf-8">
-<title>Web Young Ace Chapter Download</title>
+<title>Tonari no Young Jump Chapter Download</title>
 <style type="text/css">
 /* Main */
 * { box-sizing: border-box }
